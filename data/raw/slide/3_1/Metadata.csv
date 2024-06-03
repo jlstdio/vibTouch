@@ -1,0 +1,2 @@
+version,device name,recording epoch time,recording time,recording timezone,platform,appVersion,device id,sensors,sampleRateMs,standardisation
+3,SM-N976N,1716737723756,2024-05-27_15-35-23,Asia/Seoul,android,1.34.0,c573c362-613d-49d9-bb0e-49cbbd3de3f5,Accelerometer|Microphone|Annotation|TotalAcceleration|AccelerometerUncalibrated,10|100||10|10,false
