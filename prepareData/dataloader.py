@@ -4,6 +4,7 @@ import torch
 import torchaudio
 import pandas as pd
 from torch.utils.data import Dataset
+from util.util import lowpass_filter
 
 
 class GestureDataset(Dataset):
@@ -16,8 +17,9 @@ class GestureDataset(Dataset):
         self._load_data()
 
     def _load_data(self):
-        label_map = {'slide': {'3_0': 0, '3_1': 1, '3_2': 2, '3_3': 3},
-                     'tap': {'0': 4, '1': 5, '2': 6, '3': 7}}
+        label_map = {'slide': {'3_0': 0, '3_1': 1, '3_2': 2, '3_3': 3}, 'tap': {'0': 4, '1': 5, '2': 6, '3': 7}}
+        # label_map = {'tap': {'0': 0, '1': 1, '2': 2, '3': 3}}
+
         for gesture in self.gesture_types:
             for class_name, class_id in label_map[gesture].items():
                 acc_dir = os.path.join(self.root_dir, gesture, class_name, 'acc')
@@ -31,19 +33,19 @@ class GestureDataset(Dataset):
 
                     acc_data = pd.read_csv(acc_path)[['x', 'y', 'z']].values
                     try:
-                        audio_data, _ = torchaudio.load(audio_path)
-                        audio_data = audio_data.squeeze().numpy()  # Flatten audio data
+                        audio_data, sample_rate = torchaudio.load(audio_path)
+                        audio_data = lowpass_filter(audio_data, sample_rate,2000).squeeze().numpy()
                     except Exception as e:
                         print(f"Failed to load {audio_path}: {e}")
                         continue
 
-                    # Pad acc_data to (80, 3)
-                    acc_data_padded = np.zeros((80, 3))
+                    # Pad acc_data to match the length of filtered audio_data
+                    acc_data_padded = np.zeros((12800, 3))
                     acc_data_padded[:acc_data.shape[0], :acc_data.shape[1]] = acc_data
 
-                    # Pad audio_data to (12800,)
+                    # Pad or truncate audio_data to (12800,)
                     audio_data_padded = np.zeros(12800)
-                    audio_data_padded[:audio_data.shape[0]] = audio_data
+                    audio_data_padded[:len(audio_data)] = audio_data
 
                     self.data.append((acc_data_padded, audio_data_padded))
                     self.labels.append(class_id)

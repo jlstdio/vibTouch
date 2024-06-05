@@ -1,12 +1,11 @@
 import csv
 import math
 import os
-import librosa
 from scipy.signal import argrelextrema
 from random import randint
 import soundfile as sf
-import pandas as pd
-import numpy as np
+import torchaudio.functional as audioF
+import torchaudio.transforms as audioT
 from util.featureExtractor import *
 
 np.set_printoptions(precision=32, suppress=True)
@@ -235,8 +234,13 @@ def get_average_samples(audio_dir):
     samples = [librosa.get_duration(filename=file) * librosa.get_samplerate(file) for file in file_paths]
     return np.mean(samples)
 
+
 # Function to get the average number of rows in accelerometer CSV files
 def get_average_rows(acc_dir):
     file_paths = [os.path.join(acc_dir, file) for file in os.listdir(acc_dir) if file.endswith('.csv')]
     row_counts = [pd.read_csv(file).shape[0] for file in file_paths]
     return np.mean(row_counts)
+
+
+def lowpass_filter(audio, sample_rate, cutoff_freq):
+    return audioF.lowpass_biquad(waveform=audio, sample_rate=sample_rate, cutoff_freq=cutoff_freq)

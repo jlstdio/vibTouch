@@ -1,22 +1,21 @@
-import tensorflow as tf
-from keras._tf_keras.keras.models import Sequential
-from keras._tf_keras.keras.layers import LSTM, Dense, Dropout
+import torch.nn as nn
 
 
-def create_lstm_model(input_shape, num_classes):
-    model = Sequential()
-    model.add(LSTM(128, input_shape=input_shape, return_sequences=True))
-    model.add(Dropout(0.2))
-    model.add(LSTM(128, return_sequences=False))
-    model.add(Dropout(0.2))
-    model.add(Dense(64, activation='relu'))
-    model.add(Dense(num_classes, activation='softmax'))
+class GestureLSTM(nn.Module):
+    def __init__(self, input_size, hidden_dim, num_layers, num_classes):
+        super(GestureLSTM, self).__init__()
 
-    model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
-    return model
+        self.lstm_acc = nn.LSTM(input_size=input_size, hidden_size=hidden_dim, num_layers=num_layers, batch_first=True)
+        self.lstm_audio = nn.LSTM(input_size=1, hidden_size=hidden_dim, num_layers=num_layers, batch_first=True)
 
-# Example usage
-input_shape = (100, 3)  # 100 time steps, 3 features (x, y, z accelerometer data)
-num_classes = 10  # Number of gesture classes
-lstm_model = create_lstm_model(input_shape, num_classes)
-lstm_model.summary()
+        self.fc = nn.Linear(hidden_dim, num_classes)
+
+    def forward(self, acc_data, audio_data):
+        acc_out, _ = self.lstm_acc(acc_data)
+        audio_out, _ = self.lstm_audio(audio_data.unsqueeze(-1))
+
+        combined_out = acc_out + audio_out
+
+        output = self.fc(combined_out.mean(dim=1))
+
+        return output

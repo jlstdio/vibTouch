@@ -1,2 +1,2 @@
 version,device name,recording epoch time,recording time,recording timezone,platform,appVersion,device id,sensors,sampleRateMs,standardisation
-3,SM-N976N,1716738008639,2024-05-27_15-40-08,Asia/Seoul,android,1.34.0,c573c362-613d-49d9-bb0e-49cbbd3de3f5,Accelerometer|Microphone|Annotation|TotalAcceleration|AccelerometerUncalibrated,10|100||10|10,false
+3,iPhone 15 Pro,1717498467139,2024-06-04_10-54-27,Asia/Seoul,ios,1.34.2,e5f70f62-9e7f-4ca1-a3e1-ab77ceedcacd,Accelerometer|Microphone|Annotation|AccelerometerUncalibrated,0|100||0,false
