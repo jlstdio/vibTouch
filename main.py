@@ -1,29 +1,26 @@
 import torch
-from matplotlib import pyplot as plt
-from collections import Counter
 from torch.utils.data import DataLoader
 from prepareData.dataloader import GestureDataset, collate_fn
-from trainManager import trainManager
+from modelManager import modelManager
 
 # Load datasets
 gesture_types = ['slide', 'tap']
 # gesture_types = ['tap']
 print(f'init gesture types => {gesture_types}')
-dataset = GestureDataset(root_dir='data/sliced', gesture_types=gesture_types)
+dataset = GestureDataset(root_dir='data/train', gesture_types=gesture_types)
 
 # Split datasets into train, validation, and test sets
-train_size = int(0.8 * len(dataset))
-val_size = int(0.1 * len(dataset))
-test_size = len(dataset) - train_size - val_size
-train_dataset, val_dataset, test_dataset = torch.utils.data.random_split(dataset, [train_size, val_size, test_size])
+train_size = int(0.9 * len(dataset))
+val_size = len(dataset) - train_size
+train_dataset, val_dataset = torch.utils.data.random_split(dataset, [train_size, val_size])
 
 # Create data loaders
 batchSize = 32
 train_loader = DataLoader(train_dataset, batch_size=batchSize, shuffle=True, collate_fn=collate_fn)
 val_loader = DataLoader(val_dataset, batch_size=batchSize, shuffle=False, collate_fn=collate_fn)
-test_loader = DataLoader(test_dataset, batch_size=batchSize, shuffle=False, collate_fn=collate_fn)
 
 print(f'data loaded')
+
 '''
 # train_loader에서 클래스 분포 계산
 def get_class_distribution(loader):
@@ -48,13 +45,8 @@ plt.xticks(rotation=45)
 plt.show()
 '''
 
+
 # Train the model
 num_epochs = 90
-trainer = trainManager()
+trainer = modelManager()
 trainer.train_model(train_loader, val_loader, num_epochs)
-
-
-# Save the model
-# torch.save(trainer.print_model().state_dict(), 'gesture_transformer.pth')
-
-# f1 = trainer.test_model(test_loader)

@@ -12,8 +12,8 @@ class GestureTransformerZeropadding(nn.Module):
         acc_input_size = 3  # x, y, z
         audio_input_size = 12800  # length of audio data
         nhead = 4  # Reduce number of heads
-        hidden_dim = 256  # Reduce hidden dimension
-        num_layers = 3  # Reduce number of layers
+        hidden_dim = 256
+        num_layers = 2
         num_classes = 8
 
         self.acc_embedding = nn.Linear(acc_input_size, hidden_dim)
