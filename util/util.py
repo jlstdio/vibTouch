@@ -1,6 +1,8 @@
 import csv
 import math
 import os
+
+import pandas as pd
 from scipy.signal import argrelextrema
 from random import randint
 import soundfile as sf
@@ -67,7 +69,17 @@ def frameLimitChecker(df, target_size):
         return evenDf, oddDf
 
 
-def sliceData(originalAccDataDir, originalAudioDataDir, originalStartTime, interval, dest, start, frameLimit=40):
+def get_next_file_index(directory, extension):
+    # Get list of files with the given extension in the directory
+    files = [f for f in os.listdir(directory) if f.endswith(extension)]
+    # Extract numbers from filenames and return the next index
+    if files:
+        indices = [int(f.split('.')[0]) for f in files]
+        return max(indices) + 1
+    return 0
+
+
+def sliceData(originalAccDataDir, originalAudioDataDir, originalStartTime, interval, destTest, destTrain, start):
     # audio init
     y, sr = librosa.load(originalAudioDataDir, sr=None)
 
@@ -78,8 +90,14 @@ def sliceData(originalAccDataDir, originalAudioDataDir, originalStartTime, inter
     nsToSecs = nsToSecs / 1000000000.0  # 1000000000ns = 1sec
 
     lastSec = math.floor(nsToSecs[-1])
-    # print(lastSec)
     count = start
+
+    file_list = os.listdir(destTest + '/acc')
+    next_index_test = len(file_list) - 1
+
+    file_list = os.listdir(destTrain + '/acc')
+    next_index_train = len(file_list) - 1
+
     for i in range(0, lastSec - 2, interval):
         try:
             # start : 4.7 * 10 ** 9 | end : inf
@@ -125,20 +143,30 @@ def sliceData(originalAccDataDir, originalAudioDataDir, originalStartTime, inter
             # df1, df2 = frameLimitChecker(df, frameLimit)
             df1 = df
 
+            # Decide the destination based on the count
+            if count % 10 == 0:  # 10% goes to destTest
+                dest = destTest
+                index = next_index_test
+                next_index_test += 1
+            else:  # 90% goes to destTrain
+                dest = destTrain
+                index = next_index_train
+                next_index_train += 1
+
             # Write the DataFrame to a new CSV & mp4 file
-            accelSlicedDir = dest + 'acc/acc_' + str(count) + '.csv'
+            accelSlicedDir = os.path.join(dest, 'acc', f'acc_{index}.csv')
             df1.to_csv(accelSlicedDir, index=False)
 
-            audioSlicedDir = dest + 'audio/audio_' + str(count) + '.wav'
+            audioSlicedDir = os.path.join(dest, 'audio', f'audio_{index}.wav')
             sf.write(audioSlicedDir, ny, int(sr), 'PCM_24')
             count += 1
 
             '''
             if df2 is not None:
-                accelSlicedDir = dest + 'acc/acc_' + str(count) + '.csv'
+                accelSlicedDir = os.path.join(dest, 'acc', f'{index}.csv')
                 df2.to_csv(accelSlicedDir, index=False)
 
-                audioSlicedDir = dest + 'audio/audio_' + str(count) + '.wav'
+                audioSlicedDir = os.path.join(dest, 'audio', f'{index}.wav')
                 sf.write(audioSlicedDir, ny, int(sr), "PCM_24")
                 count += 1
             '''

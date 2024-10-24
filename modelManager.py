@@ -2,13 +2,14 @@ import numpy as np
 import torch
 import torch.optim as optim
 from sklearn.metrics import f1_score
-from modelArch.RCNN import RCNN
-from modelArch.Transformer_Upsampling import GestureTransformerUpsampling
-from modelArch.Transformer_Zeropadding import GestureTransformerZeropadding
+import wandb
 import torch.nn as nn
+import matplotlib.pyplot as plt
+import random
+from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
 
 
-# state_dict에서 'module.' 제거하는 함수
+# state_dict에서 'module' 제거하는 함수
 def remove_module_prefix(state_dict):
     new_state_dict = {}
     for k, v in state_dict.items():
@@ -20,13 +21,17 @@ def remove_module_prefix(state_dict):
 
 
 class modelManager:
-    def __init__(self, modelPath=None):
-
-        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
-        # self.model = GestureTransformerUpsampling().to(self.device)
-        self.model = GestureTransformerZeropadding().to(self.device)
-        # self.model = RCNN().to(self.device)
+    def __init__(self, modelPath=None, model=None, device=None, enableParallel=True, lr=0.0001):
+        self.model = model
+        self.device = device
+        seed = 1234
+        torch.manual_seed(seed)
+        torch.cuda.manual_seed(seed)
+        torch.cuda.manual_seed_all(seed)
+        torch.backends.cudnn.deterministic = True
+        torch.backends.cudnn.benchmark = False
+        np.random.seed(seed)
+        random.seed(seed)
 
         if not torch.cuda.is_available():
             self.model.to('cpu')
@@ -36,11 +41,11 @@ class modelManager:
             self.model.load_state_dict(prefixRemoved)
 
         # Wrap the model with DataParallel
-        if torch.cuda.device_count() > 1:
-            self.model = nn.DataParallel(self.model)
+        if torch.cuda.device_count() > 1 and enableParallel:
+           self.model = nn.DataParallel(self.model)
 
         self.criterion = nn.CrossEntropyLoss()
-        self.optimizer = optim.Adam(self.model.parameters(), lr=0.0001)
+        self.optimizer = optim.Adam(self.model.parameters(), lr=lr)
 
     def train_model(self, train_loader, val_loader, num_epochs):
 
@@ -82,12 +87,15 @@ class modelManager:
             f.write(f"Epoch {epoch + 1}/{num_epochs}, Train Loss: {train_loss:.4f}, Val Loss: {val_loss:.4f}\n")
             f.close()
 
+            wandb.log({"Training loss": train_loss})
+            wandb.log({"Validation loss": val_loss})
+
             torch.save(self.model.state_dict(), f'pths/gesture_transformer_epoch{epoch}.pth')
 
     def print_model(self):
         return self.model
 
-    def test_model(self, test_loader):
+    def test_model(self, test_loader, matrix=False):
         self.model.eval()
         test_loss = 0.0
         all_preds = []
@@ -111,5 +119,17 @@ class modelManager:
 
         f1 = f1_score(all_labels, all_preds, average='weighted')
         print(f"Test Loss: {test_loss:.4f}, F1 Score: {f1:.4f}")
+
+        if matrix is True:
+            # Generate Confusion Matrix
+            cm = confusion_matrix(all_labels, all_preds)
+            cm_normalized = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
+
+            # Plotting
+            fig, ax = plt.subplots()
+            disp = ConfusionMatrixDisplay(confusion_matrix=cm_normalized, display_labels=np.unique(all_labels))
+            disp.plot(cmap=plt.cm.Blues, ax=ax)
+            plt.title('Normalized Confusion Matrix')
+            plt.savefig('confusion_matrix.png')
 
         return f1

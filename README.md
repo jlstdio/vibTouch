@@ -16,6 +16,7 @@
    2. Tap 제스쳐의 경우. 클래스는 0,1,2,3이 있다. data/sliced/slide/0/acc, data/sliced/slide/0/audio, data/sliced/slide/1/acc, data/sliced/slide/1/audio, data/sliced/slide/2/acc, data/sliced/slide/2/audio, data/sliced/slide/3/acc, data/sliced/slide/3/audio 파일 경로가 있다. acc의 경우, acc_0.csv, acc_1.csv...과 같은 형태로 0부터 1씩 커지는 숫자로 넘버링되도록 파일이 있고. audio의 경우에도 audio_0.wav, audio_1.wav...과 같은 형태로 0부터 1씩 커지는 숫자로 넘버링되도록 파일이 있다.
    3. audio 데이터의 경우 sample rate는 16khz에 bits per sample은 24bit이다. 데이터 길이는 12800 이다.
    4. acc 데이터의 경우 길이가 80이다. csv파일 형태이며 column은 time,x,y,z이다. x,y,z데이터를 각각 추출하여 채널 0,1,2로 삼는다.
+
 다음은 모델의 목적 및 기타 사항에 대해서 설명하겠다.
 1. 모델은 시계열 데이터에 대한 Classification 모델이다.
 2. 스마트폰의 마이크와 가속도계를 활용하여 스마트폰을 책상에 둔 채로 오른쪽, 왼쪽, 위, 아래를 탭(두드리는)하는 동작과 스마트폰의 오른쪽에서 손가락으로 오른쪽, 왼쪽, 위, 아래 방향으로 쓸어서 나는 소리와 진동 데이터를 실시간으로 구분하는 인공지능 모델을 만들려고 한다.

@@ -1,22 +1,5 @@
 from dataAnalyzer.showPlot_Acc import showRawData
 from util.util import *
-from scipy.io import wavfile
-from scipy.signal import resample
-import os
-from pydub import AudioSegment
-import soundfile as sf
-
-
-def downsample_audio(audio_path, target_sample_rate=16000):
-    # Load audio
-    audio = AudioSegment.from_file(audio_path)
-    sample_rate = audio.frame_rate
-
-    # Check if downsampling is needed
-    if sample_rate > target_sample_rate:
-        audio = audio.set_frame_rate(target_sample_rate)
-        audio.export(audio_path, format="wav")
-        print(f'Audio downsampled to {target_sample_rate} Hz')
 
 
 def slicer(type='', location=0):
@@ -47,19 +30,7 @@ def slicer(type='', location=0):
     else:
         destDir = '../data/sliced/' + type + '_' + str(location) + '/'
 
-    # Count the number of existing files in the destination directory
-    acc_dir = os.path.join(destDir, 'acc')
-
     count = 0
-    if os.path.exists(acc_dir):
-        count += len([name for name in os.listdir(acc_dir) if os.path.isfile(os.path.join(acc_dir, name))])
-
-    count -= 1
-    print(f'starting count at {count}')
-
-    # Downsample audio if needed
-    downsample_audio(dataAudioDir)
-
     count = sliceData(dataAccDir, dataAudioDir, originalSet, interval, destDir, count)
 
     print(f'{count} data created')
@@ -73,7 +44,7 @@ def slicer(type='', location=0):
 print(f'starting')
 
 type = 'tap'
-# type = 'slide/3'
+#type = 'slide/3'
 for location in range(0, 4):
     print(f'working on {type} location : {location}')
     slicer(type, location)

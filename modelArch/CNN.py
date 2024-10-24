@@ -3,41 +3,61 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 
-class GestureCNN(nn.Module):
-    def __init__(self, num_classes=8):
-        super(GestureCNN, self).__init__()
+class CNN(nn.Module):
+    def __init__(self):
+        super(CNN, self).__init__()
+        # CNN for accelerometer data (3 channels)
+        self.acc_cnn = nn.Sequential(
+            nn.Conv1d(3, 32, kernel_size=5, stride=1, padding=2),
+            # nn.ReLU(),
+            nn.MaxPool1d(kernel_size=4, stride=4),
+            nn.Conv1d(32, 64, kernel_size=5, stride=1, padding=2),
+            # nn.ReLU(),
+            nn.MaxPool1d(kernel_size=4, stride=4)
+        )
 
-        # Convolutional layers for accelerometer data
-        self.acc_conv1 = nn.Conv1d(in_channels=3, out_channels=16, kernel_size=3, stride=1, padding=1)
-        self.acc_conv2 = nn.Conv1d(in_channels=16, out_channels=32, kernel_size=3, stride=1, padding=1)
-        self.acc_pool = nn.MaxPool1d(kernel_size=2, stride=2, padding=0)
+        # CNN for audio data (1 channel)
+        self.audio_cnn = nn.Sequential(
+            nn.Conv1d(1, 32, kernel_size=5, stride=1, padding=2),
+            # nn.ReLU(),
+            nn.MaxPool1d(kernel_size=4, stride=4),
+            nn.Conv1d(32, 64, kernel_size=5, stride=1, padding=2),
+            # nn.ReLU(),
+            nn.MaxPool1d(kernel_size=4, stride=4)
+        )
 
-        # Convolutional layers for audio data
-        self.audio_conv1 = nn.Conv1d(in_channels=1, out_channels=16, kernel_size=3, stride=1, padding=1)
-        self.audio_conv2 = nn.Conv1d(in_channels=16, out_channels=32, kernel_size=3, stride=1, padding=1)
-        self.audio_pool = nn.MaxPool1d(kernel_size=2, stride=2, padding=0)
+        # Additional CNN layers to combine features from both modalities
+        self.combine_cnn = nn.Sequential(
+            nn.Conv1d(128, 128, kernel_size=3, padding=1),
+            # nn.ReLU(),
+            nn.MaxPool1d(kernel_size=2, stride=2),
+            nn.Conv1d(128, 256, kernel_size=3, padding=1),
+            # nn.ReLU(),
+            nn.MaxPool1d(kernel_size=2, stride=2)
+        )
 
-        # Fully connected layers
-        self.fc1 = nn.Linear(32 * 40 + 32 * 6400, 256)
-        self.fc2 = nn.Linear(256, num_classes)
-        self.dropout = nn.Dropout(0.5)
+        # Fully connected layers for classification
+        self.fc_layers = nn.Sequential(
+            nn.Linear(51200, 128),
+            nn.ReLU(),
+            nn.Linear(128, 8)  # Assuming 8 classes as per label_map
+        )
 
     def forward(self, acc_data, audio_data):
-        # Accelerometer data through CNN
-        acc_data = acc_data.permute(0, 2, 1)  # (batch, channels, seq_len)
-        acc_out = self.acc_pool(F.relu(self.acc_conv1(acc_data)))
-        acc_out = self.acc_pool(F.relu(self.acc_conv2(acc_out)))
-        acc_out = acc_out.view(acc_out.size(0), -1)  # Flatten
+        # Process accelerometer data
+        acc_features = self.acc_cnn(acc_data.permute(0, 2, 1))  # Shape: [batch_size, channels, seq_length]
 
-        # Audio data through CNN
-        audio_data = audio_data.unsqueeze(1)  # (batch, 1, seq_len)
-        audio_out = self.audio_pool(F.relu(self.audio_conv1(audio_data)))
-        audio_out = self.audio_pool(F.relu(self.audio_conv2(audio_out)))
-        audio_out = audio_out.view(audio_out.size(0), -1)  # Flatten
+        # Process audio data
+        audio_features = self.audio_cnn(audio_data.unsqueeze(1))  # Shape: [batch_size, 1, seq_length]
 
-        # Combine and pass through fully connected layers
-        combined_out = torch.cat((acc_out, audio_out), dim=1)
-        combined_out = self.dropout(F.relu(self.fc1(combined_out)))
-        output = self.fc2(combined_out)
+        # Concatenate features along the channel dimension
+        combined_features = torch.cat((acc_features, audio_features), dim=1)
+
+        # Further combine features with additional CNN layers
+        combined_features = self.combine_cnn(combined_features)
+
+        # Flatten and pass through fully connected layers
+        combined_features = combined_features.view(combined_features.size(0), -1)
+        output = self.fc_layers(combined_features)
 
         return output
