@@ -1,7 +1,7 @@
 import torch
 
 from modelArch.TransformerWithCNN_typeClassifier import TransformerWithCNN_typeClassifier
-from modelManager import modelManager
+from modelManager_old import modelManager
 from torch.utils.data import DataLoader
 from prepareData.dataloader import GestureDataset, collate_fn
 

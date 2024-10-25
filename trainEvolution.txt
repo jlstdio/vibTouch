@@ -1,0 +1,2 @@
+starting seq 
+Epoch 1/600, Train Loss: 2.7716, Val Loss: 2.7688

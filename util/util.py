@@ -4,11 +4,13 @@ import os
 
 import pandas as pd
 from scipy.signal import argrelextrema
+import scipy
 from random import randint
 import soundfile as sf
 import torchaudio.functional as audioF
 import torchaudio.transforms as audioT
 from util.featureExtractor import *
+
 
 np.set_printoptions(precision=32, suppress=True)
 
@@ -272,3 +274,11 @@ def get_average_rows(acc_dir):
 
 def lowpass_filter(audio, sample_rate, cutoff_freq):
     return audioF.lowpass_biquad(waveform=audio, sample_rate=sample_rate, cutoff_freq=cutoff_freq)
+
+def bandpass_filter(data, sample_rate, low_freq=10, high_freq=1000, order=5):
+    nyquist = 0.5 * sample_rate
+    low = low_freq / nyquist
+    high = high_freq / nyquist
+    b, a = scipy.signal.butter(order, [low, high], btype='band')
+    filtered_data = scipy.signal.filtfilt(b, a, data)  # 위상 왜곡 방지를 위해 filtfilt 사용
+    return filtered_data
