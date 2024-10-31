@@ -1,0 +1,57 @@
+wandb_version: 1
+
+learning_rate:
+  desc: null
+  value: 0.0001
+architecture:
+  desc: null
+  value: MultimodalClassifier1D
+dataset:
+  desc: null
+  value:
+  - tap
+  - slide
+modelType:
+  desc: null
+  value: typeClassifier
+epochs:
+  desc: null
+  value: 300
+batchSize:
+  desc: null
+  value: 32
+_wandb:
+  desc: null
+  value:
+    python_version: 3.9.18
+    cli_version: 0.17.0
+    framework: keras
+    is_jupyter_run: false
+    is_kaggle_kernel: false
+    start_time: 1730302907
+    t:
+      1:
+      - 2
+      - 3
+      - 5
+      - 53
+      - 55
+      2:
+      - 2
+      - 3
+      - 5
+      - 53
+      - 55
+      3:
+      - 3
+      - 8
+      - 16
+      - 23
+      - 62
+      4: 3.9.18
+      5: 0.17.0
+      8:
+      - 5
+      10:
+      - 9
+      13: darwin-x86_64

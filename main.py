@@ -31,19 +31,19 @@ TransformerWithCNN_tapDetection.to(device)
 
 config = {
     "learning_rate": 0.0001,
-    "architecture": "Transformer With CNN advanced",
+    "architecture": "MultimodalClassifier1D",
     "dataset": ['tap', 'slide'],  # ['tap'] || ['slide']
     "modelType": "typeClassifier",  # "tapClassifier" || "slideClassifier"
     "model": MultimodalClassifier1D().to(device),
-    "epochs": 600,
+    "epochs": 400,
     "batchSize": 32,
 }
-'''
+
 wandb.init(
-    project="FL",
+    project="vibTouch",
     config=config
 )
-'''
+
 # Load datasets
 gestureType = config['dataset']
 print(f'init gesture types => {gestureType}')

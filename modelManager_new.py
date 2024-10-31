@@ -2,7 +2,7 @@ import numpy as np
 import torch
 import torch.optim as optim
 from sklearn.metrics import f1_score
-# import wandb
+import wandb
 import torch.nn as nn
 import matplotlib.pyplot as plt
 import random
@@ -42,8 +42,8 @@ class modelManager:
             self.model.load_state_dict(prefixRemoved)
 
         # Wrap the model with DataParallel
-        if torch.cuda.device_count() > 1 and enableParallel:
-           self.model = nn.DataParallel(self.model)
+        # if torch.cuda.device_count() > 1 and enableParallel:
+        #    self.model = nn.DataParallel(self.model)
 
         # 손실 함수
         self.criterion_main = nn.BCEWithLogitsLoss()
@@ -68,6 +68,8 @@ class modelManager:
                 sub_label = sub_label.to(self.device)
 
                 self.optimizer.zero_grad()
+                print(f'acc shape {acc.shape}')
+                print(f'audio shape {audio.shape}')
                 outputs_main, outputs_sub = self.model(acc, audio)
 
                 loss_main = self.criterion_main(outputs_main, main_label)
@@ -104,10 +106,10 @@ class modelManager:
             f.write(f"Epoch {epoch + 1}/{num_epochs}, Train Loss: {train_loss:.4f}, Val Loss: {val_loss:.4f}\n")
             f.close()
 
-            # wandb.log({"Training loss": train_loss})
-            # wandb.log({"Validation loss": val_loss})
+            wandb.log({"Training loss": train_loss})
+            wandb.log({"Validation loss": val_loss})
 
-            torch.save(self.model.state_dict(), f'pths/gesture_transformer_epoch{epoch}.pth')
+            torch.save(self.model.state_dict(), f'pths/multimodal_classifier1D_{epoch}.pth')
 
     def print_model(self):
         return self.model
